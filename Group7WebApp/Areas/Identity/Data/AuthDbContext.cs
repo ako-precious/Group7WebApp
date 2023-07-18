@@ -15,12 +15,20 @@ public class AuthDbContext : IdentityDbContext<WebAppUser>
     }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Post> Posts { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder builder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(builder);
-        // Customize the ASP.NET Identity model and override the defaults if needed.
-        // For example, you can rename the ASP.NET Identity table names and more.
-        // Add your customizations after calling base.OnModelCreating(builder);
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Category>()
+            .HasMany(s => s.Posts)
+            .WithMany(c => c.Categories)
+            .UsingEntity(j => j.ToTable("CategoryPost"));
     }
+    //protected override void OnModelCreating(ModelBuilder builder)
+    //{
+    //    base.OnModelCreating(builder);
+    //    // Customize the ASP.NET Identity model and override the defaults if needed.
+    //    // For example, you can rename the ASP.NET Identity table names and more.
+    //    // Add your customizations after calling base.OnModelCreating(builder);
+    //}
+
 }
