@@ -1,4 +1,5 @@
 ﻿using Group7WebApp.Areas.Identity.Data;
+using Group7WebApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,8 @@ public class AuthDbContext : IdentityDbContext<WebAppUser>
     {
 
     }
-
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Post> Posts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
