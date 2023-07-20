@@ -34,7 +34,7 @@ namespace Group7WebApp.Migrations
 
                     b.HasIndex("PostsId");
 
-                    b.ToTable("CategoryPost");
+                    b.ToTable("PostCategory", (string)null);
                 });
 
             modelBuilder.Entity("Group7WebApp.Areas.Identity.Data.WebAppUser", b =>

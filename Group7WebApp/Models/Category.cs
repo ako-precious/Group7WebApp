@@ -15,5 +15,8 @@ namespace Group7WebApp.Models
         public DateTime DateCreate { get; set; } = DateTime.Now;
 
         public ICollection<Post>? Posts { get; set; }
+
+
+
     }
 }

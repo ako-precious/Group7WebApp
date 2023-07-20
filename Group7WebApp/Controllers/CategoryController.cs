@@ -2,6 +2,7 @@
 using Group7WebApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Group7WebApp.Controllers
 {
@@ -20,9 +21,22 @@ namespace Group7WebApp.Controllers
             return View(category);
         }
 
+        public IActionResult Details(Guid id)
+        {
+            var category = _dbContext.Categories.Include(p => p.Posts).FirstOrDefault(p => p.Id == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            return View(category);
+        }
+
         //GET
         public IActionResult Create()
         {
+
             return View();
         }
 
@@ -41,7 +55,7 @@ namespace Group7WebApp.Controllers
             return View(obj);
         }
 
-        public IActionResult Edit(int? id)
+        public IActionResult Edit(Guid? id)
         {
             if (id == null)
             {
@@ -72,7 +86,7 @@ namespace Group7WebApp.Controllers
             return View(obj);
         }
 
-        public IActionResult Delete(int? id)
+        public IActionResult Delete(Guid? id)
         {
 
             var obj = _dbContext.Categories.Find(id);

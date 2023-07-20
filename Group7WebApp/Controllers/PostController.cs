@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+﻿using Group7WebApp.Areas.Identity.Data;
+using Microsoft.AspNetCore.Authorization;
 using Group7WebApp.Data;
 using Group7WebApp.Models;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Net;
 
 namespace Group7WebApp.Controllers
 {
@@ -15,30 +15,29 @@ namespace Group7WebApp.Controllers
     public class PostController : Controller
     {
         private readonly AuthDbContext _context;
+        private readonly UserManager<WebAppUser> _userManager;
+        private Task<WebAppUser?> user;
 
-        public PostController(AuthDbContext context)
+        public PostController(AuthDbContext context, UserManager<WebAppUser> userManager, Task<WebAppUser?> user)
         {
             _context = context;
+            _userManager = userManager;
+            this.user = user;
         }
 
-        // GET: Post
-        public async Task<IActionResult> Index()
+        // GET: /Posts
+        public IActionResult Index()
         {
-              return _context.Posts != null ? 
-                          View(await _context.Posts.ToListAsync()) :
-                          Problem("Entity set 'AuthDbContext.Posts'  is null.");
+            var posts = _context.Posts.Include(p => p.Categories).ToList();
+            return View(posts);
         }
 
-        // GET: Post/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        // GET: /Posts/Details/5
+        public IActionResult Details(Guid id)
         {
-            if (id == null || _context.Posts == null)
-            {
-                return NotFound();
-            }
+            var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
+            
 
-            var post = await _context.Posts
-                .FirstOrDefaultAsync(m => m.Id == id);
             if (post == null)
             {
                 return NotFound();
@@ -47,120 +46,125 @@ namespace Group7WebApp.Controllers
             return View(post);
         }
 
-        // GET: Post/Create
+        // GET: /Posts/Create
         public IActionResult Create()
         {
-            return View();
+            
+            ViewBag.Categories = _context.Categories.ToList();
+            var userId = _userManager.GetUserId(User);
+
+            // Fetch the user details from the database using the userId
+            user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (User == null)
+            {
+                return NotFound(); // User not found, handle the error accordingly
+            }
+            var viewModel = new PostInformation
+            {
+                user = user,
+                Category = ViewBag.Categories,
+                
+            };
+            return View(viewModel);
         }
 
-        // POST: Post/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: /Posts/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Content,ShortDescription,Author,DateCreate,DateUpdate")] Post post)
+        public IActionResult Create(Post post, Guid[] categoryIds)
         {
             if (ModelState.IsValid)
             {
-                post.Id = Guid.NewGuid();
-                _context.Add(post);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(post);
-        }
+                // Add selected categories to the post
+                //post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
 
-        // GET: Post/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
-        {
-            if (id == null || _context.Posts == null)
-            {
-                return NotFound();
-            }
 
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null)
-            {
-                return NotFound();
-            }
-            return View(post);
-        }
+                _context.Posts.Add(post);
+                _context.SaveChanges();
+                TempData["success"] = "Category created successfully";
 
-        // POST: Post/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Content,ShortDescription,Author,DateCreate,DateUpdate")] Post post)
-        {
-            if (id != post.Id)
-            {
-                return NotFound();
-            }
+                //var latestId = _context.Posts.OrderByDescending(x => x.Id).Select(x => x.Id).FirstOrDefault();
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(post);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PostExists(post.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(post);
-        }
-
-        // GET: Post/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
-        {
-            if (id == null || _context.Posts == null)
-            {
-                return NotFound();
-            }
-
-            var post = await _context.Posts
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (post == null)
-            {
-                return NotFound();
-            }
-
-            return View(post);
-        }
-
-        // POST: Post/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
-        {
-            if (_context.Posts == null)
-            {
-                return Problem("Entity set 'AuthDbContext.Posts'  is null.");
-            }
-            var post = await _context.Posts.FindAsync(id);
-            if (post != null)
-            {
-                _context.Posts.Remove(post);
+                return RedirectToAction("Index");
             }
             
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View(post);
         }
 
-        private bool PostExists(Guid id)
+    // GET: /Posts/Edit/5
+    public IActionResult Edit(Guid id)
         {
-          return (_context.Posts?.Any(e => e.Id == id)).GetValueOrDefault();
+            var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Categories = _context.Categories.ToList();
+            return View(post);
+        }
+
+        // POST: /Posts/Edit/5
+        [HttpPost]
+        public IActionResult Edit(Guid id, Post updatedPost, Guid[] categoryIds)
+        {
+            if (id != updatedPost.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                // Update the post's categories
+                post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
+
+                post.Title = updatedPost.Title;
+                post.Content = updatedPost.Content;
+
+                _context.SaveChanges();
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Categories = _context.Categories.ToList();
+            return View(updatedPost);
+        }
+
+        // GET: /Posts/Delete/5
+        public IActionResult Delete(Guid id)
+        {
+            var post = _context.Posts.FirstOrDefault(p => p.Id == id);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            return View(post);
+        }
+
+        // POST: /Posts/Delete/5
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(Guid id)
+        {
+            var post = _context.Posts.FirstOrDefault(p => p.Id == id);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            _context.Posts.Remove(post);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(Index));
         }
     }
 }
+

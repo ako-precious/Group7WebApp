@@ -5,11 +5,10 @@ namespace Group7WebApp.Models
 {
     public class Post
     {
-        
         public Guid Id { get; set; }
         [Required]
         public string Title { get; set; }
-       
+
         public string Content { get; set; }
         public string ShortDescription { get; set; }
         [Required]
@@ -18,6 +17,9 @@ namespace Group7WebApp.Models
 
         public DateTime DateUpdate { get; set; } = DateTime.Now;
 
-        public ICollection<Category> Categories { get; set;}
+        public ICollection<Category>? Categories { get; set; }
+        //public List<int> CategoryIds { get; set; } // Added property to store selected category IDs
+
     }
+
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Group7WebApp.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20230718005143_AddCategoryAndPostToDataBase")]
-    partial class AddCategoryAndPostToDataBase
+    [Migration("20230718193330_creatcategoryandposttable")]
+    partial class creatcategoryandposttable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,7 +37,7 @@ namespace Group7WebApp.Migrations
 
                     b.HasIndex("PostsId");
 
-                    b.ToTable("CategoryPost");
+                    b.ToTable("PostCategory", (string)null);
                 });
 
             modelBuilder.Entity("Group7WebApp.Areas.Identity.Data.WebAppUser", b =>
