@@ -17,7 +17,7 @@ namespace Group7WebApp.Models
 
         public DateTime DateUpdate { get; set; } = DateTime.Now;
 
-        public ICollection<Category>? Categories { get; set; }
+        public ICollection<Category> Categories { get; set; }
         //public List<int> CategoryIds { get; set; } // Added property to store selected category IDs
 
     }

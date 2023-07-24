@@ -5,46 +5,49 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Edit</h1>
+<<div class="container m-auto p-4">
 
-<h4>Post</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+
+    <h2>Edit Post</h2>
+    <hr />
+   
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Content" class="control-label"></label>
-                <input asp-for="Content" class="form-control" />
-                <span asp-validation-for="Content" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ShortDescription" class="control-label"></label>
-                <input asp-for="ShortDescription" class="form-control" />
-                <span asp-validation-for="ShortDescription" class="text-danger"></span>
-            </div>
-            <div class="form-group">
+        <div class="form-group pb-2">
+            <label>Title</label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="form-group pb-2">
+            <label>Content</label>
+            <textarea asp-for="Content" class="form-control"></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+        </div>
+
+        <div class="form-group pb-2">
+            <label>Short Description</label>
+            <input asp-for="ShortDescription" class="form-control"></input>
+            <span asp-validation-for="ShortDescription" class="text-danger"></span>
+        </div>
+            <div class="form-group pb-2">
                 <label asp-for="Author" class="control-label"></label>
-                <input asp-for="Author" class="form-control" />
+                <input asp-for="Author" readonly class="form-control" />
                 <span asp-validation-for="Author" class="text-danger"></span>
             </div>
-            
+        <div class="form-group pb-2">
+            <label>Categories</label>
+            <select asp-for="Categories" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))" multiple class="form-control"></select>
+        </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-controller="Post" asp-action="Index" class="btn btn-secondary">Back to List</a>
             </div>
+
         </form>
-    </div>
+    
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

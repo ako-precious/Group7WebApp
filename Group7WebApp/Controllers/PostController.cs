@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Net;
 using Azure.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Group7WebApp.Controllers
 {
@@ -17,13 +18,11 @@ namespace Group7WebApp.Controllers
     {
         private readonly AuthDbContext _context;
         private readonly UserManager<WebAppUser> _userManager;
-        private Task<WebAppUser?> user;
 
-        public PostController(AuthDbContext context, UserManager<WebAppUser> userManager, Task<WebAppUser?> user)
+        public PostController(AuthDbContext context, UserManager<WebAppUser> userManager)
         {
             _context = context;
             _userManager = userManager;
-            this.user = user;
         }
 
         // GET: /Posts
@@ -38,24 +37,15 @@ namespace Group7WebApp.Controllers
         {
             var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
             ViewBag.Categories = _context.Categories.ToList();
-            var userId = _userManager.GetUserId(User);
-
-            // Fetch the user details from the database using the userId
-            user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
+            
             if (post == null)
             {
                 return NotFound();
             }
-            var viewModel = new PostInformation
-            {
-                user = user,
-                Category = ViewBag.Categories,
-                Post = post
+           
+           
 
-            };
-
-            return View(viewModel);
+            return View();
         }
 
         [Authorize(Roles = "Admin,Editor")]
@@ -63,14 +53,14 @@ namespace Group7WebApp.Controllers
         public IActionResult Create()
         {
             
-            var userId = _userManager.GetUserId(User);
-            
-
-            // Fetch the user details from the database using the userId
-            ViewBag.user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var userId = _userManager.GetUserId(HttpContext.User);
            
 
-            if (User == null)
+            // Fetch the user details from the database using the userId
+            ViewBag.user = _userManager.FindByIdAsync(userId).Result;
+            ViewBag.Categories = _context.Categories.ToList();
+
+            if (userId == null)
             {
                 return NotFound(); // User not found, handle the error accordingly
             }
@@ -78,21 +68,26 @@ namespace Group7WebApp.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin,Editor")]
         // POST: /Posts/Create
         [HttpPost]
-        public IActionResult Create(Post post, Guid[] categoryIds)
+        public async Task<object> Create(Post post, Guid[] categoryIds)
         {
             if (ModelState.IsValid)
             {
                 // Add selected categories to the post
-                //post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
+                post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
 
 
                 _context.Posts.Add(post);
                 _context.SaveChanges();
+                        
+                var postId = _context.Posts.OrderByDescending(x => x.Id).Select(x => x.Id).FirstOrDefault();
+
+                
+                
                 TempData["success"] = "Category created successfully";
 
-                //var latestId = _context.Posts.OrderByDescending(x => x.Id).Select(x => x.Id).FirstOrDefault();
 
                 return RedirectToAction("Index");
             }
@@ -100,11 +95,12 @@ namespace Group7WebApp.Controllers
             return View(post);
         }
 
-    // GET: /Posts/Edit/5
-    public IActionResult Edit(Guid id)
+        [Authorize(Roles = "Admin,Editor")]
+        // GET: /Posts/Edit/5
+        public IActionResult Edit(Guid id)
         {
             var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
-
+            ViewBag.Categories = _context.Categories.ToList();
             if (post == null)
             {
                 return NotFound();
@@ -113,39 +109,35 @@ namespace Group7WebApp.Controllers
             ViewBag.Categories = _context.Categories.ToList();
             return View(post);
         }
+        [Authorize(Roles = "Admin,Editor")]
 
         // POST: /Posts/Edit/5
         [HttpPost]
-        public IActionResult Edit(Guid id, Post updatedPost, Guid[] categoryIds)
+        public IActionResult Edit(Post updatedPost, Guid[] categoryIds)
         {
-            if (id != updatedPost.Id)
-            {
-                return NotFound();
-            }
-
+            
             if (ModelState.IsValid)
             {
-                var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
+                //var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
 
-                if (post == null)
-                {
-                    return NotFound();
-                }
+                //if (post == null)
+                //{
+                //    return NotFound();
+                //}
 
                 // Update the post's categories
-                post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
+                //post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
 
-                post.Title = updatedPost.Title;
-                post.Content = updatedPost.Content;
-
+                _context.Posts.Update(updatedPost);
                 _context.SaveChanges();
+                TempData["success"] = "Post Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
 
             ViewBag.Categories = _context.Categories.ToList();
             return View(updatedPost);
         }
-
+        [Authorize(Roles = "Admin,Editor")]
         // GET: /Posts/Delete/5
         public IActionResult Delete(Guid id)
         {
@@ -172,6 +164,7 @@ namespace Group7WebApp.Controllers
 
             _context.Posts.Remove(post);
             _context.SaveChanges();
+            TempData["success"] = "Post Deleted successfully";
             return RedirectToAction(nameof(Index));
         }
     }
