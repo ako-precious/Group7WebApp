@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Net;
+using Azure.Identity;
 
 namespace Group7WebApp.Controllers
 {
@@ -36,37 +37,45 @@ namespace Group7WebApp.Controllers
         public IActionResult Details(Guid id)
         {
             var post = _context.Posts.Include(p => p.Categories).FirstOrDefault(p => p.Id == id);
-            
-
-            if (post == null)
-            {
-                return NotFound();
-            }
-
-            return View(post);
-        }
-
-        // GET: /Posts/Create
-        public IActionResult Create()
-        {
-            
             ViewBag.Categories = _context.Categories.ToList();
             var userId = _userManager.GetUserId(User);
 
             // Fetch the user details from the database using the userId
             user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
-            if (User == null)
+            if (post == null)
             {
-                return NotFound(); // User not found, handle the error accordingly
+                return NotFound();
             }
             var viewModel = new PostInformation
             {
                 user = user,
                 Category = ViewBag.Categories,
-                
+                Post = post
+
             };
+
             return View(viewModel);
+        }
+
+        [Authorize(Roles = "Admin,Editor")]
+        // GET: /Posts/Create
+        public IActionResult Create()
+        {
+            
+            var userId = _userManager.GetUserId(User);
+            
+
+            // Fetch the user details from the database using the userId
+            ViewBag.user = _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+           
+
+            if (User == null)
+            {
+                return NotFound(); // User not found, handle the error accordingly
+            }
+           
+            return View();
         }
 
         // POST: /Posts/Create

@@ -32,7 +32,7 @@ namespace Group7WebApp.Controllers
 
             return View(category);
         }
-
+        [Authorize(Roles = "Admin,Editor")]
         //GET
         public IActionResult Create()
         {
@@ -40,6 +40,7 @@ namespace Group7WebApp.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin,Editor")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Category obj)
@@ -54,7 +55,7 @@ namespace Group7WebApp.Controllers
             }
             return View(obj);
         }
-
+        [Authorize(Roles = "Admin,Editor")]
         public IActionResult Edit(Guid? id)
         {
             if (id == null)
@@ -70,7 +71,7 @@ namespace Group7WebApp.Controllers
             return View(category);
 
         }
-
+        [Authorize(Roles = "Admin,Editor")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(Category obj)
@@ -85,7 +86,7 @@ namespace Group7WebApp.Controllers
             TempData["success"] = "Category edit successfully";
             return View(obj);
         }
-
+        [Authorize(Roles = "Admin,Editor")]
         public IActionResult Delete(Guid? id)
         {
 
