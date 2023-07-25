@@ -19,5 +19,12 @@ public class WebAppUser : IdentityUser
 
     [Required]
     public string Role { get; set; }
+    public string Status { get; set; }
+    public string? ContactId { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Zip { get; set; }
+    
 }
 

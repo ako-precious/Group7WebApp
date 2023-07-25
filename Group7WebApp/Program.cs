@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Group7WebApp.Data;
 using Group7WebApp.Areas.Identity.Data;
+using Group7WebApp.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("AuthDbContextConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
@@ -40,5 +41,16 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AuthDbContext>();
+    var userM = services.GetRequiredService<UserManager<WebAppUser>>();
+    var roleM = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+    await MyIdentityDbInitializer.SeedData(userM, roleM, context);
+}
+
 
 app.Run();
