@@ -25,6 +25,7 @@ public class AuthDbContext : IdentityDbContext<WebAppUser>
             .WithMany(c => c.Posts)
             .UsingEntity(j => j.ToTable("PostCategory"));
         base.OnModelCreating(modelBuilder);
+
     }
     //protected override void OnModelCreating(ModelBuilder builder)
     //{

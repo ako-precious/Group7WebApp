@@ -60,6 +60,7 @@ namespace Group7WebApp.Controllers
             ViewBag.user = _userManager.FindByIdAsync(userId).Result;
             ViewBag.Categories = _context.Categories.ToList();
 
+
             if (userId == null)
             {
                 return NotFound(); // User not found, handle the error accordingly
@@ -73,25 +74,52 @@ namespace Group7WebApp.Controllers
         [HttpPost]
         public async Task<object> Create(Post post, Guid[] categoryIds)
         {
-            if (ModelState.IsValid)
-            {
-                // Add selected categories to the post
-                post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
+            if (ModelState.IsValid){
+              //  Retrieve existing categories from the database based on their IDs
+               var selectedCategories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
 
-
+                  // Add the selected categories to the post's Categories collection
+                   post.Categories = selectedCategories;
+                // Add the new post to the database
                 _context.Posts.Add(post);
+               // Save changes to the database
                 _context.SaveChanges();
-                        
-                var postId = _context.Posts.OrderByDescending(x => x.Id).Select(x => x.Id).FirstOrDefault();
-
-                
-                
                 TempData["success"] = "Category created successfully";
-
-
                 return RedirectToAction("Index");
             }
-            
+            //if (ModelState.IsValid)
+            //{
+            //    // Add selected categories to the post
+            //    post.Categories = _context.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
+
+            //    foreach (var categoryId in categoryIds)
+            //    {
+            //        var category = _context.Categories.Find(categoryId);
+            //        if (category != null)
+            //        {
+            //            var postCategory = new PostCategory
+            //            {
+            //                Post = post,
+            //                Category = category
+            //            };
+            //            post.PostCategories.Add(postCategory);
+            //        }
+            //    }
+
+
+            //    _context.Posts.Add(post);
+            //    _context.SaveChanges();
+
+            //    var postId = _context.Posts.OrderByDescending(x => x.Id).Select(x => x.Id).FirstOrDefault();
+
+
+
+            //    TempData["success"] = "Category created successfully";
+
+
+            //    return RedirectToAction("Index");
+            //}
+
             return View(post);
         }
 
