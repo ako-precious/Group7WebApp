@@ -82,23 +82,73 @@ namespace Group7WebApp.Controllers
                     City = model.City,
                     Zip = model.Zip,
                     Status = Status.Pending.GetDescription(),
-                    ContactId= _userManager.GetUserId(User)
+                    ContactId = _userManager.GetUserId(User)
                 };
 
-                IdentityResult result = _userManager.CreateAsync(user,model.Password).Result;
+                IdentityResult result = _userManager.CreateAsync(user, model.Password).Result;
 
                 if (result.Succeeded)
                 {
-                    _userManager.AddToRoleAsync(user,model.Role).Wait();
+                    _userManager.AddToRoleAsync(user, model.Role).Wait();
                 }
                 else
                 {
                     TempData["error"] = result.Errors?.FirstOrDefault()?.Description;
-                    
+
                     return View(model);
                 }
 
                 TempData["success"] = "Contact Created Successfully!!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View(model);
+            }
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Approve(AuthorizationModel model)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return View();
+                }
+
+                var user = _userManager.Users.Where(x => x.Email == model.Id).FirstOrDefault();
+                user.Status = model.Status;
+                 _userManager.UpdateAsync(user).Wait();
+
+                TempData["success"] = "Contact Approved Successfully!!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View(model);
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Reject(AuthorizationModel model)
+        {
+            try
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    return View();
+                }
+
+                var user = _userManager.Users.Where(x => x.Email == model.Id).FirstOrDefault();
+                user.Status = model.Status;
+                _userManager.UpdateAsync(user).Wait();
+
+                TempData["success"] = "Contact Rejected Successfully!!";
                 return RedirectToAction(nameof(Index));
             }
             catch

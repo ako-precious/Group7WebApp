@@ -70,4 +70,10 @@ namespace Group7WebApp.Models
     }
 
 
+    public class AuthorizationModel
+    {
+        public string Id { get; set; }
+        public string Status { get; set; }
+    }
+
 }
