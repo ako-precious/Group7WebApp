@@ -22,7 +22,15 @@
             { "ApproveContact","ApproveContact" }
         };
     }
+    public static class Priviledge
+    {
+        public const string Create = "CreateContact";
+        public const string View = "ViewContact";
+        public const string Edit = "EditContact";
+        public const string Delete = "DeleteContact";
+        public const string Approve = "ApproveContact";
 
+    }
     public class CustomClaimTypes
     {
         public const string Permission = "permission";

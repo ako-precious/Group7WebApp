@@ -1,7 +1,9 @@
 ﻿@model IEnumerable<Group7WebApp.Areas.Identity.Data.WebAppUser>
+@using Group7WebApp.Helpers
+@inject Group7WebApp.Helpers.Interface.IAuthorizationMiddlewareService authorizeService
 
 @{
-    ViewData["Title"] = "Users Role";
+    ViewData["Title"] = "Contacts";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -10,9 +12,18 @@
 <div class="conatiner p-3">
     <div class="row pt-4 pb-2">
         <div class="col-6">
-            <h2 class="text-white"> Users List</h2>
+            <h2 class="text-white"> Contacts</h2>
+
         </div>
-      
+        @if (await authorizeService.Authorize(Priviledge.Create, null))
+        {
+            <div class="col-6">
+
+                <a asp-action="Create" style="float:right"> Create New </a>
+
+            </div>
+        }
+
 
     </div>
 
@@ -20,7 +31,7 @@
     <table class="table">
         <thead>
             <tr>
-               
+
                 <th>
                     @Html.DisplayNameFor(model => model.FirtName)
                 </th>
@@ -29,11 +40,20 @@
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Email)
-                </th
-                ><th>
-                    @Html.DisplayNameFor(model => model.PhoneNumber)
                 </th>
+                @* <th>
+                @Html.DisplayNameFor(model => model.PhoneNumber)
+                </th>*@
 
+                <th>@Html.DisplayNameFor(model => model.Address)</th>
+
+                <th>@Html.DisplayNameFor(model => model.City)</th>
+
+                <th>@Html.DisplayNameFor(model => model.State)</th>
+
+                <th>@Html.DisplayNameFor(model => model.Zip)</th>
+
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
                 <th></th>
             </tr>
         </thead>
@@ -41,7 +61,7 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    
+
                     <td>
                         @Html.DisplayFor(modelItem => item.FirtName)
                     </td>
@@ -51,16 +71,29 @@
                     <td>
                         @Html.DisplayFor(modelItem => item.Email)
                     </td>
-                     <td>
-                        @Html.DisplayFor(modelItem => item.PhoneNumber)
-                    </td>
+                    @*  <td>
+                @Html.DisplayFor(modelItem => item.PhoneNumber)
+                </td>*@
+                    <td>@Html.DisplayFor(model => item.Address)</td>
 
+                    <td>@Html.DisplayFor(model => item.City)</td>
+
+                    <td>@Html.DisplayFor(model => item.State)</td>
+
+                    <td>@Html.DisplayFor(model => item.Zip)</td>
+
+                    <td>@Html.DisplayFor(model => item.Status)</td>
                     <td>
                         <div class="w-75 btn-group " role="group">
-                            <a asp-action="Edit" asp-route-id="@item.Id"> <i class="bi bi-pencil-square text-info"></i> </a>
+                            @if (await authorizeService.Authorize(Priviledge.Edit, item))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id"> <i class="bi bi-pencil-square text-info"></i> </a>
+                            }
                             <a asp-action="Details" asp-route-id="@item.Id" class="px-2"><i class="bi bi-eye text-success"></i></a>
-                            <a asp-action="Delete" asp-route-id="@item.Id"><i class="bi bi-trash3 text-danger-emphasis"></i></a>
-
+                            @if (await authorizeService.Authorize(Priviledge.Delete, item))
+                            {
+                                <a asp-action="Delete" asp-route-id="@item.Id"><i class="bi bi-trash3 text-danger-emphasis"></i></a>
+                            }
                         </div>
                     </td>
                 </tr>

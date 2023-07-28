@@ -1,37 +1,115 @@
 ﻿using Group7WebApp.Areas.Identity.Data;
 using Group7WebApp.Data;
+using Group7WebApp.Helpers;
+using Group7WebApp.Helpers.Interface;
+using Group7WebApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Polly;
 using System.Data;
 
 namespace Group7WebApp.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UserController : Controller
     {
         private readonly UserManager<WebAppUser> _userManager;
         private readonly SignInManager<WebAppUser> _signInManager;
-
+        private readonly IAuthorizationMiddlewareService _authorizationService;
         private readonly AuthDbContext _context;
-        public UserController(AuthDbContext context, UserManager<WebAppUser> userManager, SignInManager<WebAppUser> signInManager)
+        public UserController(AuthDbContext context, UserManager<WebAppUser> userManager,
+            SignInManager<WebAppUser> signInManager, IAuthorizationMiddlewareService authorizationService)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
+            _authorizationService = authorizationService;
         }
+        [Authorize(Roles = $"{Roles.AdminRole},{Roles.ManagerRole},{Roles.UserRole}")]
         public IActionResult Index()
         {
-
+            if (User.IsInRole(Roles.UserRole))
+                return View(_userManager.Users.Where(x => x.ContactId == _userManager.GetUserId(User) || x.Status == Status.Approved.GetDescription()).ToList());
             return View(_userManager.Users.ToList());
         }
 
+
+        public ActionResult Create()
+        {
+            var model = new ContactModel()
+            {
+                RoleList = PopulateRoles()
+            };
+            return View(model);
+        }
+        private List<SelectListItem> PopulateRoles()
+        {
+            return new List<SelectListItem>()
+                {
+                    new SelectListItem { Text=Roles.UserRole,Value=Roles.UserRole},
+                    new SelectListItem { Text=Roles.ManagerRole,Value=Roles.ManagerRole},
+                    new SelectListItem { Text=Roles.AdminRole,Value=Roles.AdminRole}
+
+                };
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create(ContactModel model)
+        {
+            try
+            {
+                model.RoleList = PopulateRoles();
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                WebAppUser user = new WebAppUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirtName = model.FirstName,
+                    LastName = model.LastName,
+                    Role = model.Role,
+                    EmailConfirmed = true,
+                    LockoutEnabled = false,
+                    Address = model.Address,
+                    State = model.State,
+                    City = model.City,
+                    Zip = model.Zip,
+                    Status = Status.Pending.GetDescription(),
+                    ContactId= _userManager.GetUserId(User)
+                };
+
+                IdentityResult result = _userManager.CreateAsync(user,model.Password).Result;
+
+                if (result.Succeeded)
+                {
+                    _userManager.AddToRoleAsync(user,model.Role).Wait();
+                }
+                else
+                {
+                    TempData["error"] = result.Errors?.FirstOrDefault()?.Description;
+                    
+                    return View(model);
+                }
+
+                TempData["success"] = "Contact Created Successfully!!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View(model);
+            }
+        }
         public IActionResult Details(string id)
         {
             var user = _userManager.Users.FirstOrDefault(p => p.Id == id);
-            
+
             if (user == null)
             {
                 return NotFound();

@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Group7WebApp.Data;
 using Group7WebApp.Areas.Identity.Data;
 using Group7WebApp.Helpers;
+using Group7WebApp.Helpers.Interface;
+using Group7WebApp.Helpers.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("AuthDbContextConnection") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
@@ -18,6 +20,7 @@ builder.Services.AddDefaultIdentity<WebAppUser>(options => options.SignIn.Requir
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddScoped<IAuthorizationMiddlewareService, AuthorizationMiddlewareService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
