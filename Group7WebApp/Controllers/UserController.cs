@@ -196,7 +196,7 @@ namespace Group7WebApp.Controllers
             {
                 // If the user was successfully deleted, you can perform additional actions if needed.
                 // For example, you can sign out the user (optional).
-                await _signInManager.SignOutAsync();
+                //await _signInManager.SignOutAsync();
                 TempData["success"] = "User Account Deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
