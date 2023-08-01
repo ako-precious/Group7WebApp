@@ -45,7 +45,7 @@ namespace Group7WebApp.Controllers
             };
             return View(model);
         }
-        private List<SelectListItem> PopulateRoles()
+        private List<SelectListItem> PopulateRoles(string selected = "")
         {
             return new List<SelectListItem>()
                 {
@@ -122,7 +122,7 @@ namespace Group7WebApp.Controllers
 
                 var user = _userManager.Users.Where(x => x.Email == model.Id).FirstOrDefault();
                 user.Status = model.Status;
-                 _userManager.UpdateAsync(user).Wait();
+                _userManager.UpdateAsync(user).Wait();
 
                 TempData["success"] = "Contact Approved Successfully!!";
                 return RedirectToAction(nameof(Index));
@@ -177,6 +177,92 @@ namespace Group7WebApp.Controllers
             return View(user);
         }
 
+
+
+        public ActionResult Edit(string id)
+        {
+            var user = _userManager.Users.FirstOrDefault(p => p.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditContactModel()
+            {
+                RoleList = PopulateRoles(),
+                Address = user.Address,
+                City = user.City,
+                Email = user.Email,
+                FirstName = user.FirtName,
+                LastName = user.LastName,
+                Role = user.Role,
+                State = user.State,
+                Zip = user.Zip,
+                Id=user.Id
+
+            };
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(EditContactModel model)
+        {
+            try
+            {
+                model.RoleList = PopulateRoles();
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                var user = _userManager.Users.FirstOrDefault(p => p.Id == model.Id);
+
+                if (user == null)
+                {
+                    TempData["error"] = "Contact not found";
+
+                    return View(model);
+                }
+                string previousRole = user.Role;
+                user.Email = model.Email;
+                user.FirtName = model.FirstName;
+                user.LastName = model.LastName;
+                user.Role = model.Role;
+                user.State = model.State;
+                user.Zip = model.Zip;
+                user.Address = model.Address;
+                user.City = model.City;
+                user.UserName = model.Email;
+
+
+
+                IdentityResult result = _userManager.UpdateAsync(user).Result;
+
+                if (result.Succeeded)
+                {
+                    _userManager.RemoveFromRoleAsync(user, previousRole).Wait();
+
+                    _userManager.AddToRoleAsync(user, model.Role).Wait();
+                }
+                else
+                {
+                    TempData["error"] = result.Errors?.FirstOrDefault()?.Description;
+
+                    return View(model);
+                }
+
+                TempData["success"] = "Contact Updated Successfully!!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View(model);
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Delete(WebAppUser userr)
         {
@@ -196,7 +282,7 @@ namespace Group7WebApp.Controllers
             {
                 // If the user was successfully deleted, you can perform additional actions if needed.
                 // For example, you can sign out the user (optional).
-                await _signInManager.SignOutAsync();
+                //  await _signInManager.SignOutAsync();
                 TempData["success"] = "User Account Deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
