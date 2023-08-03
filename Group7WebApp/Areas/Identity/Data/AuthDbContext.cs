@@ -13,17 +13,11 @@ public class AuthDbContext : IdentityDbContext<WebAppUser>
     {
 
     }
-    public DbSet<Post> Posts { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<PostCategory> PostCategories { get; set; }
-    public object PostCategory { get; internal set; }
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Post>()
-            .HasMany(p => p.Categories)
-            .WithMany(c => c.Posts)
-            .UsingEntity(j => j.ToTable("PostCategory"));
+        
         base.OnModelCreating(modelBuilder);
 
     }
